@@ -23,7 +23,8 @@ module "database" {
 }
 
 module "messaging" {
-  source = "./modules/messaging"
+  source             = "./modules/messaging"
+  notification_email = var.notification_email
 }
 
 module "compute" {

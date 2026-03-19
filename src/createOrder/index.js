@@ -13,10 +13,10 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body);
         
         // Validation
-        if (!body.order_id || !body.customer_id || !body.items || body.items.length === 0) {
+        if (!body.order_id || !body.customer_id || !body.items || body.items.length === 0 || !body.email) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: "Validation failed: order_id, customer_id, and items are required." })
+                body: JSON.stringify({ message: "Validation failed: order_id, customer_id, items, and email are required." })
             };
         }
 
@@ -42,7 +42,12 @@ exports.handler = async (event) => {
         // Publish to SNS
         const publishParams = {
             TopicArn: process.env.SNS_TOPIC_ARN,
-            Message: JSON.stringify(body),
+            Message: JSON.stringify({
+                default: JSON.stringify(body),
+                email: `Novo pedido criado!\n\nID do Pedido: ${body.order_id}\nCliente: ${body.customer_id}\nEmail: ${body.email}\n\nObrigado por comprar conosco!`
+            }),
+            MessageStructure: "json",
+            Subject: "Confirmação de Pedido",
             MessageAttributes: {
                 "event_type": {
                     DataType: "String",

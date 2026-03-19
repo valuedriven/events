@@ -7,6 +7,12 @@ data "aws_iam_role" "lab_role" {
   name = "LabRole"
 }
 
+variable "notification_email" {
+  description = "Email to receive order notifications"
+  type        = string
+  default     = "dummy@example.com" # Default to avoid mandatory input if not provided
+}
+
 # SNS Topic
 resource "aws_sns_topic" "orders_topic" {
   name = "orders_topic"
@@ -14,6 +20,12 @@ resource "aws_sns_topic" "orders_topic" {
   sqs_success_feedback_role_arn    = data.aws_iam_role.lab_role.arn
   sqs_success_feedback_sample_rate = 100
   sqs_failure_feedback_role_arn    = data.aws_iam_role.lab_role.arn
+}
+
+resource "aws_sns_topic_subscription" "email_sub" {
+  topic_arn = aws_sns_topic.orders_topic.arn
+  protocol  = "email"
+  endpoint  = var.notification_email
 }
 
 # -------------------------------------------------------------------------
