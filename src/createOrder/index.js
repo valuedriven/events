@@ -10,6 +10,7 @@ const sqsClient = new SQSClient({});
 
 exports.handler = async (event) => {
     console.log("Event:", JSON.stringify(event));
+    console.log("DLQ_URL:", process.env.DLQ_URL);
     
     try {
         const { email, ...orderData } = JSON.parse(event.body);
@@ -68,20 +69,24 @@ exports.handler = async (event) => {
         console.error("Error:", error);
 
         // Send to DLQ
-        try {
-            const dlqParams = {
-                QueueUrl: process.env.DLQ_URL,
-                MessageBody: JSON.stringify({
-                    error: error.message,
-                    stack: error.stack,
-                    event: event,
-                    timestamp: new Date().toISOString()
-                })
-            };
-            await sqsClient.send(new SendMessageCommand(dlqParams));
-            console.log("Error sent to DLQ");
-        } catch (dlqError) {
-            console.error("Failed to send error to DLQ:", dlqError);
+        if (process.env.DLQ_URL) {
+            try {
+                const dlqParams = {
+                    QueueUrl: process.env.DLQ_URL,
+                    MessageBody: JSON.stringify({
+                        error: error.message,
+                        stack: error.stack,
+                        event: event,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+                await sqsClient.send(new SendMessageCommand(dlqParams));
+                console.log(`Error sent to DLQ: ${process.env.DLQ_URL}`);
+            } catch (dlqError) {
+                console.error(`Failed to send error to DLQ (${process.env.DLQ_URL}):`, dlqError);
+            }
+        } else {
+            console.warn("DLQ_URL environment variable is not set. Skipping DLQ send.");
         }
 
         return {
