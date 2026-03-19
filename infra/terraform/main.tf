@@ -47,3 +47,7 @@ module "api_gateway" {
 output "api_endpoint" {
   value = module.api_gateway.api_endpoint
 }
+
+output "order_endpoint" {
+  value = module.api_gateway.order_endpoint
+}

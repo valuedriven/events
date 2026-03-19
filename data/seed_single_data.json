@@ -1,0 +1,21 @@
+  {
+    "order_id": "1",
+    "customer_id": "2",
+    "email": "customer1@example.com",
+    "status": "PLACED",
+    "items": [
+      {
+        "product_id": "1",
+        "quantity": 2,
+        "unit_price": 45
+      },
+      {
+        "product_id": "2",
+        "quantity": 2,
+        "unit_price": 110
+      }
+    ],
+    "total_amount": 310,
+    "currency": "BRL",
+    "created_at": "2026-03-19T11:01:00.000Z"
+  }

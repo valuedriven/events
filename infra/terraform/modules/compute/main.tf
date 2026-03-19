@@ -16,8 +16,8 @@ data "aws_iam_role" "lab_role" {
 # -------------------------------------------------------------------------
 data "archive_file" "create_order_zip" {
   type        = "zip"
-  source_dir  = "${path.root}/../src/createOrder"
-  output_path = "${path.root}/../src/createOrder.zip"
+  source_dir  = "${path.root}/../../src/createOrder"
+  output_path = "${path.root}/../../src/createOrder.zip"
 }
 
 resource "aws_lambda_function" "create_order" {
@@ -41,8 +41,8 @@ resource "aws_lambda_function" "create_order" {
 # -------------------------------------------------------------------------
 data "archive_file" "billing_register_zip" {
   type        = "zip"
-  source_dir  = "${path.root}/../src/billingRegister"
-  output_path = "${path.root}/../src/billingRegister.zip"
+  source_dir  = "${path.root}/../../src/billingRegister"
+  output_path = "${path.root}/../../src/billingRegister.zip"
 }
 
 resource "aws_lambda_function" "billing_register" {
@@ -71,8 +71,8 @@ resource "aws_lambda_event_source_mapping" "billing_sqs" {
 # -------------------------------------------------------------------------
 data "archive_file" "inventory_register_zip" {
   type        = "zip"
-  source_dir  = "${path.root}/../src/inventoryRegister"
-  output_path = "${path.root}/../src/inventoryRegister.zip"
+  source_dir  = "${path.root}/../../src/inventoryRegister"
+  output_path = "${path.root}/../../src/inventoryRegister.zip"
 }
 
 resource "aws_lambda_function" "inventory_register" {
@@ -101,8 +101,8 @@ resource "aws_lambda_event_source_mapping" "inventory_sqs" {
 # -------------------------------------------------------------------------
 data "archive_file" "shipping_register_zip" {
   type        = "zip"
-  source_dir  = "${path.root}/../src/shippingRegister"
-  output_path = "${path.root}/../src/shippingRegister.zip"
+  source_dir  = "${path.root}/../../src/shippingRegister"
+  output_path = "${path.root}/../../src/shippingRegister.zip"
 }
 
 resource "aws_lambda_function" "shipping_register" {

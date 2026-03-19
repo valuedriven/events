@@ -37,3 +37,7 @@ resource "aws_lambda_permission" "apigw_create_order" {
 output "api_endpoint" {
   value = aws_apigatewayv2_api.order_api.api_endpoint
 }
+
+output "order_endpoint" {
+  value = "${aws_apigatewayv2_api.order_api.api_endpoint}/orders"
+}
