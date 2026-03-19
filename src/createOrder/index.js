@@ -44,7 +44,8 @@ exports.handler = async (event) => {
             TopicArn: process.env.SNS_TOPIC_ARN,
             Message: JSON.stringify({
                 default: JSON.stringify(body),
-                email: `Novo pedido criado!\n\nID do Pedido: ${body.order_id}\nCliente: ${body.customer_id}\nEmail: ${body.email}\n\nObrigado por comprar conosco!`
+                email: `Novo pedido criado!\n\nID do Pedido: ${body.order_id}\nCliente: ${body.customer_id}\nEmail: ${body.email}\n\nObrigado por comprar conosco!`,
+                sms: `Pedido ${body.order_id} criado para o cliente ${body.customer_id}.`
             }),
             MessageStructure: "json",
             Subject: "Confirmação de Pedido",

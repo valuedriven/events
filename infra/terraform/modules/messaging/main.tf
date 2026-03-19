@@ -10,7 +10,11 @@ data "aws_iam_role" "lab_role" {
 variable "notification_email" {
   description = "Email to receive order notifications"
   type        = string
-  default     = "dummy@example.com" # Default to avoid mandatory input if not provided
+}
+
+variable "notification_phone" {
+  description = "Phone number to receive order notifications (+55...)"
+  type        = string
 }
 
 # SNS Topic
@@ -26,6 +30,12 @@ resource "aws_sns_topic_subscription" "email_sub" {
   topic_arn = aws_sns_topic.orders_topic.arn
   protocol  = "email"
   endpoint  = var.notification_email
+}
+
+resource "aws_sns_topic_subscription" "sms_sub" {
+  topic_arn = aws_sns_topic.orders_topic.arn
+  protocol  = "sms"
+  endpoint  = var.notification_phone
 }
 
 # -------------------------------------------------------------------------

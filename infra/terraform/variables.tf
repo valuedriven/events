@@ -7,5 +7,9 @@ variable "aws_region" {
 variable "notification_email" {
   description = "Email to receive order notifications"
   type        = string
-  default     = "dummy@example.com"
+}
+
+variable "notification_phone" {
+  description = "Phone number to receive order notifications (+55...)"
+  type        = string
 }

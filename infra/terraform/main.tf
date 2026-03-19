@@ -25,6 +25,7 @@ module "database" {
 module "messaging" {
   source             = "./modules/messaging"
   notification_email = var.notification_email
+  notification_phone = var.notification_phone
 }
 
 module "compute" {
