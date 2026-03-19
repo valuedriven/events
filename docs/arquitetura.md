@@ -11,14 +11,14 @@ graph TD
     subgraph "Processamento de Pedidos"
         APIG -->|Invoca| CO_Lambda[Lambda: CreateOrder]
         CO_Lambda -->|Persiste| DB_Orders[(DynamoDB: Orders)]
-        CO_Lambda -->|Publica Evento| SNS_Orders[SNS Topic: orders_topic]
-        CO_Lambda -.->|DLQ| SQS_CreateOrder_DLQ[create_order_dlq]
+        CO_Lambda -->|Publica Evento Sucesso ou Erro| SNS_Orders[SNS Topic: orders_topic]
     end
 
     subgraph "Mensageria e Assinaturas"
-        SNS_Orders -->|Assina| SQS_Billing[SQS: billing_queue]
-        SNS_Orders -->|Assina| SQS_Inventory[SQS: inventory_queue]
-        SNS_Orders -->|Assina| SQS_Shipping[SQS: shipping_queue]
+        SNS_Orders -->|Assina OrderCreated| SQS_Billing[SQS: billing_queue]
+        SNS_Orders -->|Assina OrderCreated| SQS_Inventory[SQS: inventory_queue]
+        SNS_Orders -->|Assina OrderCreated| SQS_Shipping[SQS: shipping_queue]
+        SNS_Orders -.->|Assina OrderError| SQS_CreateOrder_DLQ[SQS: create_order_dlq]
         
         SQS_Billing -.->|DLQ| SQS_Billing_DLQ[billing_dlq]
         SQS_Inventory -.->|DLQ| SQS_Inventory_DLQ[inventory_dlq]
@@ -51,7 +51,7 @@ graph TD
 1.  **Ingress**: O cliente envia uma requisição POST para o **API Gateway**.
 2.  **Orquestração Inicial**: A Lambda `CreateOrder` valida os dados, salva o estado inicial no DynamoDB (`Orders`) e dispara uma notificação para o tópico SNS `orders_topic`.
 3.  **Fan-out**: O SNS distribui a mensagem para três filas SQS distintas (`billing`, `inventory`, `shipping`), permitindo o processamento paralelo e assíncrono.
-4.  **Resiliência**: O sistema utiliza Dead Letter Queues (DLQ) para garantir que nenhuma mensagem/evento seja perdido. A Lambda `CreateOrder` redireciona erros de processamento críticos para sua própria DLQ, enquanto cada fila de domínio (`billing`, `inventory`, `shipping`) possui sua própria DLQ para capturar falhas após 3 tentativas.
+4.  **Resiliência**: O sistema utiliza Dead Letter Queues (DLQ) para garantir que nenhuma mensagem/evento seja perdido. A Lambda `CreateOrder` publica eventos de erro no próprio tópico SNS (`orders_topic`), que são roteados exclusivamente para a fila `create_order_dlq` através de um filtro de assinatura de mensagens (`event_type = OrderError`). Cada fila de domínio (`billing`, `inventory`, `shipping`) também possui sua própria DLQ para capturar mensagens que falham no processamento de suas respectivas Lambdas após 3 tentativas.
 5.  **Execução em Background**: Lambdas dedicadas consomem as mensagens de suas respectivas filas e atualizam as tabelas de domínio no DynamoDB.
 
 ## Tecnologias Utilizadas
