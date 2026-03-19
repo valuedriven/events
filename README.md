@@ -1,61 +1,53 @@
-# AWS Event-Driven Architecture (Order Processing)
+# Events - AWS Event-Driven Architecture
 
-Este projeto implementa uma arquitetura orientada a eventos para processamento de pedidos utilizando **Terraform**, **AWS Lambda (Node.js 22)**, **SNS**, **SQS** e **DynamoDB**.
+Este projeto implementa uma arquitetura baseada em eventos (EDA) na AWS, utilizando **Terraform** para infraestrutura como código e **GitHub Actions** para CI/CD automático.
 
-## Arquitetura
+O sistema processa pedidos de forma assíncrona, distribuindo a carga entre diferentes serviços (Faturamento, Estoque e Entrega) através de um padrão Fan-out com SNS e SQS.
 
-O fluxo principal (Evento `OrderCreated`) funciona da seguinte forma:
+---
 
-1.  **API Gateway**: Recebe uma requisição `POST /orders`.
-2.  **Order Lambda (`createOrder`)**: Valida o payload, persiste no DynamoDB (`Order`) e publica um evento no **SNS Topic** (`orders_topic`).
-3.  **Fan-out (SNS -> SQS)**: O tópico SNS envia a mensagem para três filas SQS distintas:
-    *   `billing_queue`
-    *   `inventory_queue`
-    *   `shipping_queue`
-4.  **Consumidores (Lambdas)**:
-    *   **Billing**: Cria o registro de faturamento.
-    *   **Inventory**: Reserva itens no estoque.
-    *   **Shipping**: Gera dados de rastreio para envio.
+## 🏗️ Arquitetura
 
-### Características Principais
-- **Idempotência**: Todas as Lambdas utilizam `ConditionExpression` do DynamoDB para evitar duplicidade.
-- **Resiliência**: Filas de Dead Letter (DLQ) configuradas para tratamento de falhas.
-- **Filtros SNS**: Assinaturas SQS utilizam `FilterPolicy` com `MessageAttributes`.
-- **Infrastructure as Code**: Todo o ambiente é versionado via Terraform.
-- **CI/CD**: Pipeline do GitHub Actions para validação e provisionamento automático.
+O diagrama detalhado da arquitetura e a descrição dos fluxos podem ser encontrados em [docs/arquitetura.md](docs/arquitetura.md).
 
-## Estrutura do Projeto
+### Componentes Principais
+- **API Gateway**: Ponto de entrada para criação de pedidos via HTTP POST.
+- **Lambda Functions**:
+  - `createOrder`: Valida pedidos, persiste no DynamoDB e publica no SNS.
+  - `billingRegister`: Processa pagamentos (via SQS).
+  - `inventoryRegister`: Atualiza estoque (via SQS).
+  - `shippingRegister`: Inicia fluxo de entrega (via SQS).
+- **Mensageria**:
+  - **SNS (orders_topic)**: Distribui eventos de pedidos criados.
+  - **SQS (billing, inventory, shipping)**: Filas individuais para processamento resiliente.
+  - **DLQs (Dead Letter Queues)**: Capturam falhas de processamento em todas as filas e na Lambda principal.
+- **DynamoDB**: Tabelas NoSQL para persistência de pedidos e dados de domínios específicos.
+
+---
+
+## 📂 Estrutura do Projeto
 
 ```text
 .
-├── .github/workflows/      # Pipeline de CI/CD (GitHub Actions)
-├── data/                   # Massa de dados gerada (seed_data.json)
-├── infra/terraform/        # Arquivos Terraform (módulos e main)
-│   ├── modules/
-│   │   ├── api_gateway/    # Configuração do API Gateway
-│   │   ├── compute/        # Definição das Lambdas e gatilhos
-│   │   ├── database/       # Tabelas DynamoDB
-│   │   └── messaging/      # Tópico SNS e Filas SQS
-├── scripts/                # Scripts utilitários (ex: gerador de dados)
-└── src/                    # Código fonte das funções Lambda
+├── data/               # Dados para semente (seed)
+├── docs/               # Documentação técnica e diagramas
+├── infra/
+│   └── terraform/      # Definições de infraestrutura (HCL)
+├── scripts/            # Scripts utilitários (Seed, etc.)
+└── src/                # Código fonte das funções Lambda (Node.js)
 ```
 
-## Pré-requisitos
+---
 
-1. **AWS CLI** configurado e autenticado.
-2. **Terraform** v1.0+ instalado.
-3. **Node.js 22** (se quiser rodar testes locais ou scripts).
+## 🚀 Como Executar
 
-## Como Implantar
+### Pré-requisitos
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.0
+- [AWS CLI](https://aws.amazon.com/cli/) configurado
+- [Node.js](https://nodejs.org/) >= 22 (para scripts locais)
 
-### Via GitHub Actions
-1. Adicione os Segredos no repositório GitHub:
-   - `AWS_ACCESS_KEY_ID`
-   - `AWS_SECRET_ACCESS_KEY`
-   - `AWS_SESSION_TOKEN` (obrigatório para Learner Labs)
-2. Faça push para a branch `main`.
-
-### Manual (Terraform)
+### 1. Provisionamento (Terraform)
+Navegue até o diretório de infraestrutura:
 ```bash
 cd infra/terraform
 terraform init
@@ -63,16 +55,46 @@ terraform plan
 terraform apply
 ```
 
-## Testando a Solução
-
-Após o deploy, você receberá a `api_endpoint`. Use o arquivo `data/seed_data.json` para realizar chamadas:
-
+### 2. Semeando Dados (Seed)
+Caso deseje popular as tabelas iniciais para teste:
 ```bash
-curl -X POST <API_ENDPOINT>/orders \
-     -H "Content-Type: application/json" \
-     -d @data/seed_data.json # (enviar um item do array)
+# Na raiz do projeto
+node scripts/seed.js
 ```
 
-## Observações do Desenvolvedor
-- Este projeto foi desenhado para o ambiente **AWS Learner Labs**, utilizando o `LabRole` predefinido.
-- A região padrão é `us-east-1`.
+---
+
+## 📡 Endpoints da API
+
+Após o `terraform apply`, o Terraform exibirá os seguintes outputs:
+- `api_endpoint`: URL base do API Gateway.
+- `order_endpoint`: Endpoint direto para criação de pedidos (`POST /orders`).
+
+### Exemplo de Payload (POST /orders)
+```json
+{
+  "order_id": "ORD-123",
+  "customer_id": "CUST-456",
+  "email": "cliente@exemplo.com",
+  "items": [
+    { "product": "Laptop", "quantity": 1 }
+  ]
+}
+```
+
+---
+
+## 🛡️ Resiliência e Monitoramento
+
+- **Retry e DLQ**: Configurado com 3 tentativas automáticas antes de enviar mensagens falhas para as Dead Letter Queues.
+- **SNS Logging**: Logs de entrega do SNS habilitados no CloudWatch para auditoria.
+- **Segurança**: Uso da `LabRole` da AWS Academy e variáveis de ambiente protegidas.
+
+---
+
+## 🛠️ CI/CD
+
+O projeto utiliza **GitHub Actions** (`.github/workflows/terraform.yml`) para:
+1. Validar mudanças no Terraform.
+2. Gerenciar o estado (`tfstate`) remotamente em um bucket S3.
+3. Aplicar automaticamente as mudanças na branch `main`.

@@ -12,6 +12,7 @@ graph TD
         APIG -->|Invoca| CO_Lambda[Lambda: CreateOrder]
         CO_Lambda -->|Persiste| DB_Orders[(DynamoDB: Orders)]
         CO_Lambda -->|Publica Evento| SNS_Orders[SNS Topic: orders_topic]
+        CO_Lambda -.->|DLQ| SQS_CreateOrder_DLQ[create_order_dlq]
     end
 
     subgraph "Mensageria e Assinaturas"
@@ -42,7 +43,7 @@ graph TD
     classDef messaging fill:#fff4dd,stroke:#d4a017,stroke-width:2px;
     
     class DB_Orders,DB_Billing,DB_Inventory,DB_Shipping database;
-    class SNS_Orders,SQS_Billing,SQS_Inventory,SQS_Shipping,SQS_Billing_DLQ,SQS_Inventory_DLQ,SQS_Shipping_DLQ messaging;
+    class SNS_Orders,SQS_Billing,SQS_Inventory,SQS_Shipping,SQS_Billing_DLQ,SQS_Inventory_DLQ,SQS_Shipping_DLQ,SQS_CreateOrder_DLQ messaging;
 ```
 
 ## Descrição dos Fluxos
@@ -50,7 +51,7 @@ graph TD
 1.  **Ingress**: O cliente envia uma requisição POST para o **API Gateway**.
 2.  **Orquestração Inicial**: A Lambda `CreateOrder` valida os dados, salva o estado inicial no DynamoDB (`Orders`) e dispara uma notificação para o tópico SNS `orders_topic`.
 3.  **Fan-out**: O SNS distribui a mensagem para três filas SQS distintas (`billing`, `inventory`, `shipping`), permitindo o processamento paralelo e assíncrono.
-4.  **Resiliência**: Cada fila possui uma **Dead Letter Queue (DLQ)** para capturar falhas após 3 tentativas de processamento.
+4.  **Resiliência**: O sistema utiliza Dead Letter Queues (DLQ) para garantir que nenhuma mensagem/evento seja perdido. A Lambda `CreateOrder` redireciona erros de processamento críticos para sua própria DLQ, enquanto cada fila de domínio (`billing`, `inventory`, `shipping`) possui sua própria DLQ para capturar falhas após 3 tentativas.
 5.  **Execução em Background**: Lambdas dedicadas consomem as mensagens de suas respectivas filas e atualizam as tabelas de domínio no DynamoDB.
 
 ## Tecnologias Utilizadas

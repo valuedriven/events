@@ -16,10 +16,23 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VAR_notification_email: ${{ secrets.NOTIFICATION_EMAIL }}
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+      aws-region: ${{ env.AWS_REGION }}
+
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+      #     aws-region: ${{ env.AWS_REGION }}
 
       - name: Check and create S3 bucket
         run: |
