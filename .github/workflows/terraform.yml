@@ -1,0 +1,58 @@
+name: "Terraform Provision"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  AWS_REGION: us-east-1
+  TF_STATE_BUCKET_NAME: "event-driven-arch-tf-state-${{ github.repository_owner }}"
+
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check and create S3 bucket
+        run: |
+          if ! aws s3api head-bucket --bucket ${{ env.TF_STATE_BUCKET_NAME }} 2>/dev/null; then
+            echo "Bucket does not exist. Creating..."
+            aws s3api create-bucket --bucket ${{ env.TF_STATE_BUCKET_NAME }} --region ${{ env.AWS_REGION }}
+          else
+            echo "Bucket exists."
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: ./infra/terraform
+        run: |
+          # Captura Account ID para unicidade do estado
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          terraform init \
+            -backend-config="bucket=${{ env.TF_STATE_BUCKET_NAME }}" \
+            -backend-config="key=state/terraform.tfstate.events.${ACCOUNT_ID}"
+
+      - name: Terraform Plan
+        working-directory: ./infra/terraform
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        working-directory: ./infra/terraform
+        run: terraform apply -auto-approve
