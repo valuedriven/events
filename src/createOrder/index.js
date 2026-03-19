@@ -10,10 +10,10 @@ exports.handler = async (event) => {
     console.log("Event:", JSON.stringify(event));
     
     try {
-        const body = JSON.parse(event.body);
+        const { email, ...orderData } = JSON.parse(event.body);
         
         // Validation
-        if (!body.order_id || !body.customer_id || !body.items || body.items.length === 0) {
+        if (!orderData.order_id || !orderData.customer_id || !orderData.items || orderData.items.length === 0) {
             return {
                 statusCode: 400,
                 body: JSON.stringify({ message: "Validation failed: order_id, customer_id, and items are required." })
@@ -23,7 +23,7 @@ exports.handler = async (event) => {
         // Persist in Order DynamoDB
         const putParams = {
             TableName: process.env.ORDER_TABLE,
-            Item: body,
+            Item: orderData,
             ConditionExpression: "attribute_not_exists(order_id)"
         };
         
@@ -42,7 +42,11 @@ exports.handler = async (event) => {
         // Publish to SNS
         const publishParams = {
             TopicArn: process.env.SNS_TOPIC_ARN,
-            Message: JSON.stringify(body),
+            Message: JSON.stringify({
+                default: JSON.stringify(orderData),
+                email: `Novo pedido criado!\n\nID do Pedido: ${orderData.order_id}\nCliente: ${orderData.customer_id}${email ? `\nEmail do Cliente: ${email}` : ''}\n\nObrigado por comprar conosco!`
+            }),
+            MessageStructure: "json",
             Subject: "Confirmação de Pedido",
             MessageAttributes: {
                 "event_type": {
@@ -56,7 +60,7 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 201,
-            body: JSON.stringify({ message: "Order created successfully", order_id: body.order_id })
+            body: JSON.stringify({ message: "Order created successfully", order_id: orderData.order_id })
         };
     } catch (error) {
         console.error("Error:", error);

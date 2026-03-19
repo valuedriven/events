@@ -2,6 +2,7 @@
   {
     "order_id": "1",
     "customer_id": "2",
+    "email": "customer1@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -22,6 +23,7 @@
   {
     "order_id": "2",
     "customer_id": "3",
+    "email": "customer2@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -42,6 +44,7 @@
   {
     "order_id": "3",
     "customer_id": "4",
+    "email": "customer3@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -62,6 +65,7 @@
   {
     "order_id": "4",
     "customer_id": "5",
+    "email": "customer4@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -82,6 +86,7 @@
   {
     "order_id": "5",
     "customer_id": "1",
+    "email": "customer5@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -102,6 +107,7 @@
   {
     "order_id": "6",
     "customer_id": "2",
+    "email": "customer6@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -122,6 +128,7 @@
   {
     "order_id": "7",
     "customer_id": "3",
+    "email": "customer7@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -142,6 +149,7 @@
   {
     "order_id": "8",
     "customer_id": "4",
+    "email": "customer8@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -162,6 +170,7 @@
   {
     "order_id": "9",
     "customer_id": "5",
+    "email": "customer9@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -182,6 +191,7 @@
   {
     "order_id": "10",
     "customer_id": "1",
+    "email": "customer10@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -202,6 +212,7 @@
   {
     "order_id": "11",
     "customer_id": "2",
+    "email": "customer11@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -222,6 +233,7 @@
   {
     "order_id": "12",
     "customer_id": "3",
+    "email": "customer12@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -242,6 +254,7 @@
   {
     "order_id": "13",
     "customer_id": "4",
+    "email": "customer13@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -262,6 +275,7 @@
   {
     "order_id": "14",
     "customer_id": "5",
+    "email": "customer14@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -282,6 +296,7 @@
   {
     "order_id": "15",
     "customer_id": "1",
+    "email": "customer15@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -302,6 +317,7 @@
   {
     "order_id": "16",
     "customer_id": "2",
+    "email": "customer16@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -322,6 +338,7 @@
   {
     "order_id": "17",
     "customer_id": "3",
+    "email": "customer17@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -342,6 +359,7 @@
   {
     "order_id": "18",
     "customer_id": "4",
+    "email": "customer18@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -362,6 +380,7 @@
   {
     "order_id": "19",
     "customer_id": "5",
+    "email": "customer19@example.com",
     "status": "PLACED",
     "items": [
       {
@@ -382,6 +401,7 @@
   {
     "order_id": "20",
     "customer_id": "1",
+    "email": "customer20@example.com",
     "status": "PLACED",
     "items": [
       {
