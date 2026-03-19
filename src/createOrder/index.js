@@ -13,7 +13,11 @@ exports.handler = async (event) => {
     console.log("DLQ_URL:", process.env.DLQ_URL);
     
     try {
-        const { email, ...orderData } = JSON.parse(event.body);
+        const { email, forceError, ...orderData } = JSON.parse(event.body);
+        
+        if (forceError) {
+            throw new Error("Forced error for DLQ testing");
+        }
         
         // Validation
         if (!orderData.order_id || !orderData.customer_id || !orderData.items || orderData.items.length === 0) {
@@ -66,7 +70,8 @@ exports.handler = async (event) => {
             body: JSON.stringify({ message: "Order created successfully", order_id: orderData.order_id })
         };
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Caught Exception:", error.name, error.message);
+        if (error.stack) console.error(error.stack);
 
         // Send to DLQ
         if (process.env.DLQ_URL) {
