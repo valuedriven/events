@@ -1,10 +1,12 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const snsClient = new SNSClient({});
+const sqsClient = new SQSClient({});
 
 exports.handler = async (event) => {
     console.log("Event:", JSON.stringify(event));
@@ -64,6 +66,24 @@ exports.handler = async (event) => {
         };
     } catch (error) {
         console.error("Error:", error);
+
+        // Send to DLQ
+        try {
+            const dlqParams = {
+                QueueUrl: process.env.DLQ_URL,
+                MessageBody: JSON.stringify({
+                    error: error.message,
+                    stack: error.stack,
+                    event: event,
+                    timestamp: new Date().toISOString()
+                })
+            };
+            await sqsClient.send(new SendMessageCommand(dlqParams));
+            console.log("Error sent to DLQ");
+        } catch (dlqError) {
+            console.error("Failed to send error to DLQ:", dlqError);
+        }
+
         return {
             statusCode: 500,
             body: JSON.stringify({ message: "Internal Server Error", error: error.message })

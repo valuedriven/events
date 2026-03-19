@@ -154,6 +154,13 @@ resource "aws_sns_topic_subscription" "shipping_sub" {
 }
 
 # -------------------------------------------------------------------------
+# Create Order DLQ
+# -------------------------------------------------------------------------
+resource "aws_sqs_queue" "create_order_dlq" {
+  name = "create_order_dlq"
+}
+
+# -------------------------------------------------------------------------
 # Outputs
 # -------------------------------------------------------------------------
 output "orders_topic_arn" {
@@ -182,4 +189,8 @@ output "shipping_queue_url" {
 
 output "shipping_queue_arn" {
   value = aws_sqs_queue.shipping_queue.arn
+}
+
+output "create_order_dlq_url" {
+  value = aws_sqs_queue.create_order_dlq.url
 }

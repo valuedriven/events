@@ -6,6 +6,7 @@ variable "orders_topic_arn" {}
 variable "billing_queue_arn" {}
 variable "inventory_queue_arn" {}
 variable "shipping_queue_arn" {}
+variable "create_order_dlq_url" {}
 
 data "aws_iam_role" "lab_role" {
   name = "LabRole"
@@ -32,6 +33,7 @@ resource "aws_lambda_function" "create_order" {
     variables = {
       ORDER_TABLE   = var.order_table_name
       SNS_TOPIC_ARN = var.orders_topic_arn
+      DLQ_URL       = var.create_order_dlq_url
     }
   }
 }
